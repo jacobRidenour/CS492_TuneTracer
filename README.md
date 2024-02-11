@@ -5,3 +5,6 @@ Developed by Treyton Perkins, Jacob Ridenour, and Austin Shutt for Purdue Fort W
 # Tune Tracer
 
 This project uses Spotify's automatic music transcription (AMT) machine learning model, [Basic Pitch](https://github.com/spotify/basic-pitch).
+
+# Setup
+

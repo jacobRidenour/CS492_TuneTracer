@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tune Tracer</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1>Tune Tracer</h1>
+    <button id="testButton">Test</button>
+    <p id="response"></p>
+    <script>
+        $(document).ready(function(){
+            $("#testButton").click(function(){
+                $.get("/api/hello", function(data, status){
+                    $("#response").text(data.message);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
