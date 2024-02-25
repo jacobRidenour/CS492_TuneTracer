@@ -3,20 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <title>Tune Tracer</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 <body>
     <h1>Tune Tracer</h1>
-    <button id="testButton">Test</button>
-    <p id="response"></p>
+    <input type="file" id="fileInput">
+    <button onclick="uploadFile()">Upload</button>
+    <div id="response"></div>
+
     <script>
-        $(document).ready(function(){
-            $("#testButton").click(function(){
-                $.get("/api/hello", function(data, status){
-                    $("#response").text(data.message);
-                });
-            });
-        });
+        function uploadFile() {
+            var input = document.getElementById('fileInput');
+            if (input.files.length > 0) {
+                var file = input.files[0];
+                var formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.midiId) {
+                        const downloadMidiBtn = document.createElement("button");
+                        downloadMidiBtn.innerText = "Download MIDI";
+                        downloadMidiBtn.onclick = function() {
+                            window.location.href = `/download/${data.midiId}`;
+                        };
+                        document.body.appendChild(downloadMidiBtn);
+
+                        // For PDF generation (future implementation)
+                        // if (data.pdfId) { ... }
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            } else {
+                alert("Please select a file first.");
+            }
+    }
     </script>
 </body>
 </html>
