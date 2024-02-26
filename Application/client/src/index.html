@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tune Tracer</title>
+</head>
+<body>
+    <h1>Tune Tracer</h1>
+    <input type="file" id="fileInput">
+    <button onclick="uploadFile()">Upload</button>
+    <div id="response"></div>
+
+    <script>
+        function uploadFile() {
+            var input = document.getElementById('fileInput');
+            if (input.files.length > 0) {
+                var file = input.files[0];
+                var formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.midiId) {
+                        const downloadMidiBtn = document.createElement("button");
+                        downloadMidiBtn.innerText = "Download MIDI";
+                        downloadMidiBtn.onclick = function() {
+                            window.location.href = `/download/${data.midiId}`;
+                        };
+                        document.body.appendChild(downloadMidiBtn);
+
+                        // For PDF generation (future implementation)
+                        // if (data.pdfId) { ... }
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            } else {
+                alert("Please select a file first.");
+            }
+    }
+    </script>
+</body>
+</html>

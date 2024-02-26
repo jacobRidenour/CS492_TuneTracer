@@ -1,0 +1,4 @@
+Flask
+Flask-CORS
+basic-pitch
+tensorflow==2.12.0
