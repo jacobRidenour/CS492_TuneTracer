@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory, send_file, current_app
 import os
+import io
 import tempfile
 import werkzeug
 from utils import *
@@ -73,7 +74,23 @@ def download_file(file_id):
             return {"error": "Internal server error"}, 500
     return {"error": "File not found"}, 404
 
-
+@app.route('/getPdf/<file_id>', methods=['GET'])
+def send_pdf(file_id):
+    if file_id in temp_store:
+        file_path = temp_store[file_id]
+        print(f'Attempting to conver midi file {file_path} to pdf')
+        try:
+            midi_pdf = midi_to_pdf(file_path)
+            return send_file(
+                io.BytesIO(midi_pdf),
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name="output.pdf"
+            )
+        except Exception as e:
+            print(f"error serving pdf {e}")
+            return {"error": "Internal server error"}, 501
+    return {"error": "File not found"}, 404
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')

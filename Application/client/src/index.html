@@ -9,6 +9,7 @@
     <input type="file" id="fileInput">
     <button onclick="uploadFile()">Upload</button>
     <div id="response"></div>
+    <div id="pdfContainer"></div>
 
     <script>
         function uploadFile() {
@@ -17,7 +18,10 @@
                 var file = input.files[0];
                 var formData = new FormData();
                 formData.append('file', file);
-
+                const responseDiv = document.getElementById("response");
+                const pdfDiv = document.getElementById("pdfContainer");
+                responseDiv.innerHTML = "";
+                pdfDiv.innerHTML = "";
                 fetch('/upload', {
                     method: 'POST',
                     body: formData,
@@ -30,7 +34,28 @@
                         downloadMidiBtn.onclick = function() {
                             window.location.href = `/download/${data.midiId}`;
                         };
-                        document.body.appendChild(downloadMidiBtn);
+                        responseDiv.appendChild(downloadMidiBtn);
+
+                        const pdfButton = document.createElement("button");
+                        pdfButton.innerText = "Get PDF";
+                        pdfButton.onclick = function() {
+                            fetch(`/getPdf/${data.midiId}`)
+                                .then(response => response.blob())
+                                .then(blob => {
+                                    const blobUrl = URL.createObjectURL(blob)
+                                    const pdfObject = document.createElement("object");
+                                    pdfObject.data = blobUrl;
+                                    pdfObject.type = "application/pdf";
+                                    pdfObject.width = "50%";
+                                    pdfObject.height = "500px";
+
+                                    
+                                    
+                                    pdfDiv.appendChild(pdfObject);
+                                })
+                                .catch(error => console.error("error: ",error))
+                        };
+                        responseDiv.appendChild(pdfButton)
 
                         // For PDF generation (future implementation)
                         // if (data.pdfId) { ... }
