@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, send_from_directory, send_file, curre
 import os
 import io
 from utils import *
+from instrument_recognizer import *
 import uuid
 import tensorflow as tf
 from basic_pitch.inference import predict_and_save
@@ -38,8 +39,9 @@ def handle_upload():
     
     # instrument classification here
     try:
+        prediction = -1
         prediction = process_wav_instrument(audio_path)
-        print("Prediction = " + prediction)
+        print(enumerate_prediction(prediction))
     except Exception as e:
         current_app.logger.error(f"Error in instrument recognition: {str(e)}")
         return {"error": "Internal server error"}, 500
@@ -59,6 +61,7 @@ def handle_upload():
                 "midiId": id,
                 "midiFilename": midi_filename,
                 # "pdfId": "soon"
+                "instrumentPrediction": prediction
             })
         else:
             print('MIDI file does not exist:', midi_path)
