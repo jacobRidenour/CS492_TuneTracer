@@ -8,3 +8,5 @@ This project uses Spotify's automatic music transcription (AMT) machine learning
 
 # Setup
 
+This project uses the open source command line music tool lilypond. Visit http://lilypond.org/download.html for information on 
+downloading and installing lilypond

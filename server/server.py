@@ -1,8 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory, send_file, current_app
 import os
 import io
-import tempfile
-import werkzeug
 from utils import *
 import uuid
 import tensorflow as tf
@@ -78,7 +76,7 @@ def download_file(file_id):
 def send_pdf(file_id):
     if file_id in temp_store:
         file_path = temp_store[file_id]
-        print(f'Attempting to conver midi file {file_path} to pdf')
+        print(f'Attempting to convert midi file {file_path} to pdf')
         try:
             midi_pdf = midi_to_pdf(file_path)
             return send_file(
