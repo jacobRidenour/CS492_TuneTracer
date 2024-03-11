@@ -37,6 +37,13 @@ def handle_upload():
     )
     
     # instrument classification here
+    try:
+        prediction = process_wav_instrument(audio_path)
+        print("Prediction = " + prediction)
+    except Exception as e:
+        current_app.logger.error(f"Error in instrument recognition: {str(e)}")
+        return {"error": "Internal server error"}, 500
+
     # open and edit midi stuff here (use a function in utils probs?)
 
     midi_filename = os.path.splitext(unique_filename)[0] + '_basic_pitch.mid'
