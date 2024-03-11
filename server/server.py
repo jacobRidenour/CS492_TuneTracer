@@ -1,9 +1,8 @@
 from flask import Flask, request, jsonify, send_from_directory, send_file, current_app
 import os
 import io
-import tempfile
-import werkzeug
 from utils import *
+from instrument_recognizer import *
 import uuid
 import tensorflow as tf
 from basic_pitch.inference import predict_and_save
@@ -39,6 +38,14 @@ def handle_upload():
     )
     
     # instrument classification here
+    try:
+        prediction = -1
+        prediction = process_wav_instrument(audio_path)
+        prediction = enumerate_prediction(prediction)
+    except Exception as e:
+        current_app.logger.error(f"Error in instrument recognition: {str(e)}")
+        return {"error": "Internal server error"}, 500
+
     # open and edit midi stuff here (use a function in utils probs?)
 
     midi_filename = os.path.splitext(unique_filename)[0] + '_basic_pitch.mid'
@@ -54,6 +61,7 @@ def handle_upload():
                 "midiId": id,
                 "midiFilename": midi_filename,
                 # "pdfId": "soon"
+                "instrumentPrediction": prediction,
             })
         else:
             print('MIDI file does not exist:', midi_path)
@@ -78,7 +86,7 @@ def download_file(file_id):
 def send_pdf(file_id):
     if file_id in temp_store:
         file_path = temp_store[file_id]
-        print(f'Attempting to conver midi file {file_path} to pdf')
+        print(f'Attempting to convert midi file {file_path} to pdf')
         try:
             midi_pdf = midi_to_pdf(file_path)
             return send_file(

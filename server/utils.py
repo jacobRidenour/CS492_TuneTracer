@@ -1,8 +1,16 @@
-from music21 import *
 import os
-# stuff with basic pitch
+import sys
+from pathlib import Path
+from music21 import midi, stream, environment
 
-# stuff with instrument classifier
+if sys.platform.startswith('win'):
+    project_root = Path(__file__).parent.parent
+    include_folder_path = project_root / "include" / "lilypond-2.24.3" / "bin" / "lilypond.exe"
+    lilypond_path = str(include_folder_path.resolve())
+    environment.set('lilypondPath', lilypond_path)
+    print(f"Lilypond path set to {lilypond_path}")
+
+# stuff with basic pitch
 
 # misc helper functions and stuff
 
