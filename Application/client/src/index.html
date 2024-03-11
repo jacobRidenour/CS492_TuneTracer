@@ -28,6 +28,11 @@
                 })
                 .then(response => response.json())
                 .then(data => {
+                    if(data.instrumentPrediction){
+                        const label = document.createElement("label");
+                        label.textContent = "Instrument Prediction: " + data.instrumentPrediction;
+                        responseDiv.appendChild(label);
+                    }
                     if (data.midiId) {
                         const downloadMidiBtn = document.createElement("button");
                         downloadMidiBtn.innerText = "Download MIDI";

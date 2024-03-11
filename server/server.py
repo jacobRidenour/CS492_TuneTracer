@@ -41,7 +41,7 @@ def handle_upload():
     try:
         prediction = -1
         prediction = process_wav_instrument(audio_path)
-        print(enumerate_prediction(prediction))
+        prediction = enumerate_prediction(prediction)
     except Exception as e:
         current_app.logger.error(f"Error in instrument recognition: {str(e)}")
         return {"error": "Internal server error"}, 500
@@ -61,7 +61,7 @@ def handle_upload():
                 "midiId": id,
                 "midiFilename": midi_filename,
                 # "pdfId": "soon"
-                "instrumentPrediction": prediction
+                "instrumentPrediction": prediction,
             })
         else:
             print('MIDI file does not exist:', midi_path)
