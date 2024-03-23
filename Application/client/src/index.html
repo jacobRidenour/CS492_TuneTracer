@@ -23,8 +23,12 @@
             var fileInput = document.getElementById('fileInput');
             fileInput.addEventListener('change', function(e){
                 var fileName = e.target.files[0].name;
-                var nextSibling = e.target.nextElementSibling;
-                nextSibling.innerText = fileName;
+                var label = e.target.nextElementSibling;
+                label.innerText = fileName;
+
+                // Clear response & PDF container if new file selected
+                document.getElementById("response").innerHTML = "";
+                document.getElementById("pdfContainer").innerHTML = "";
             });
         });
 
