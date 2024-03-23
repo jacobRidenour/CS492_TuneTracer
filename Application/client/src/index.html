@@ -3,15 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <title>Tune Tracer</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-    <h1>Tune Tracer</h1>
-    <input type="file" id="fileInput">
-    <button onclick="uploadFile()">Upload</button>
-    <div id="response"></div>
-    <div id="pdfContainer"></div>
+    <div class="container mt-5">
+        <h1 class="mb-4">Tune Tracer</h1>
+        <div class="custom-file mb-3">
+            <input type="file" class="custom-file-input" id="fileInput">
+            <label class="custom-file-label" for="fileInput">Choose file</label>
+        </div>
+        <button onclick="uploadFile()" class="btn btn-primary">Upload</button>
+        <div id="response" class="mt-3"></div>
+        <div id="pdfContainer" class="mt-3"></div>
+    </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var fileInput = document.getElementById('fileInput');
+            fileInput.addEventListener('change', function(e){
+                var fileName = e.target.files[0].name;
+                var nextSibling = e.target.nextElementSibling;
+                nextSibling.innerText = fileName;
+            });
+        });
+
         function uploadFile() {
             var input = document.getElementById('fileInput');
             if (input.files.length > 0) {
@@ -20,7 +35,7 @@
                 formData.append('file', file);
                 const responseDiv = document.getElementById("response");
                 const pdfDiv = document.getElementById("pdfContainer");
-                responseDiv.innerHTML = "";
+                responseDiv.innerHTML = "<br>";
                 pdfDiv.innerHTML = "";
                 fetch('/upload', {
                     method: 'POST',
@@ -29,9 +44,9 @@
                 .then(response => response.json())
                 .then(data => {
                     if(data.instrumentPrediction){
-                        const label = document.createElement("label");
-                        label.textContent = "Instrument Prediction: " + data.instrumentPrediction;
-                        responseDiv.appendChild(label);
+                        const predictionText = document.createElement("div");
+                        predictionText.textContent = "Instrument Prediction: " + data.instrumentPrediction;
+                        responseDiv.appendChild(predictionText);
                     }
                     if (data.midiId) {
                         const downloadMidiBtn = document.createElement("button");
@@ -44,23 +59,22 @@
                         const pdfButton = document.createElement("button");
                         pdfButton.innerText = "Get PDF";
                         pdfButton.onclick = function() {
+                            pdfDiv.innerHTML = "";
+
                             fetch(`/getPdf/${data.midiId}`)
                                 .then(response => response.blob())
                                 .then(blob => {
-                                    const blobUrl = URL.createObjectURL(blob)
+                                    const blobUrl = URL.createObjectURL(blob);
                                     const pdfObject = document.createElement("object");
                                     pdfObject.data = blobUrl;
                                     pdfObject.type = "application/pdf";
-                                    pdfObject.width = "50%";
-                                    pdfObject.height = "500px";
-
-                                    
-                                    
+                                    pdfObject.width = "100%";
+                                    pdfObject.height = "500px"; // Adjust size as needed
                                     pdfDiv.appendChild(pdfObject);
                                 })
-                                .catch(error => console.error("error: ",error))
+                                .catch(error => console.error("error: ",error));
                         };
-                        responseDiv.appendChild(pdfButton)
+                        responseDiv.appendChild(pdfButton);
 
                         // For PDF generation (future implementation)
                         // if (data.pdfId) { ... }
