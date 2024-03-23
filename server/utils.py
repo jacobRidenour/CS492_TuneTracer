@@ -1,20 +1,9 @@
 import os
 import sys
 from pathlib import Path
-from music21 import midi, stream, environment
+from music21 import midi, stream
 
-if sys.platform.startswith('win'):
-    project_root = Path(__file__).parent.parent
-    include_folder_path = project_root / "include" / "lilypond-2.24.3" / "bin" / "lilypond.exe"
-    lilypond_path = str(include_folder_path.resolve())
-    environment.set('lilypondPath', lilypond_path)
-    print(f"Lilypond path set to {lilypond_path}")
-
-# stuff with basic pitch
-
-# misc helper functions and stuff
-
-# convert midi to pdf
+# Convert MIDI to PDF with lilypond
 def midi_to_pdf(midi_path):
   #read midi file
   midi_file = midi.translate.midiFilePathToStream(midi_path)
@@ -39,3 +28,26 @@ def midi_to_pdf(midi_path):
   os.remove("./temp")
 
   return pdf_content
+
+# Clean out files from temp directory when there's more than the threshold
+def cleanup_old_files(directory, max_files=30):
+    delete = False
+  
+    # Get list of files in temp dir
+    files = sorted(
+        [
+          os.path.join(directory, filename)
+          for filename in os.listdir(directory)
+          if not filename.endswith('.pdf')
+        ]
+    )
+
+    # If we've got more than max_files, clear out the folder
+    if len(files) > max_files:
+      delete = True
+    
+    if delete:
+        for i in range(len(files)):
+          os.remove(files[i])
+          print(f"Deleted old file: {files[i]}")
+

@@ -2,11 +2,12 @@ from flask import Flask, request, jsonify, send_from_directory, send_file, curre
 import os
 import io
 from utils import *
-from instrument_recognizer import *
+from model.instrument_recognizer import *
 import uuid
 import tensorflow as tf
 from basic_pitch.inference import predict_and_save
 from basic_pitch import ICASSP_2022_MODEL_PATH
+from music21 import environment
 
 app = Flask(__name__, static_folder='../Application/client/src')
 
@@ -22,11 +23,14 @@ def handle_upload():
     if file.filename == '':
         return {"error": "No selected file"}, 400
     
+    # If temp dir gets too full...
+    cleanup_old_files(TEMP_DIR)
+    
     unique_filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
     audio_path = os.path.join(TEMP_DIR, unique_filename)
     file.save(audio_path)
     
-    # Process audio file with basic-pitch
+    # Process audio file into MIDI with basic-pitch
     output_directory = TEMP_DIR
     predict_and_save(
         audio_path_list=[audio_path],
@@ -37,7 +41,7 @@ def handle_upload():
         save_notes=True
     )
     
-    # instrument classification here
+    # Classify instrument from original audio file
     try:
         prediction = -1
         prediction = process_wav_instrument(audio_path)
@@ -45,14 +49,21 @@ def handle_upload():
     except Exception as e:
         current_app.logger.error(f"Error in instrument recognition: {str(e)}")
         return {"error": "Internal server error"}, 500
-
-    # open and edit midi stuff here (use a function in utils probs?)
-
+    
     midi_filename = os.path.splitext(unique_filename)[0] + '_basic_pitch.mid'
     
     try: 
         midi_path = os.path.join(output_directory, midi_filename)
-                
+        
+        # Open/Edit midi here (maybe use a function in utils.py?)
+        # try:
+        #     with open(midi_path) as file:
+        #         change instrument of midi file based on prediction
+        #         other changes
+        # except Exception as e:
+        #     current_app.logger.error(f"Error in editing MIDI: {str(e)}")
+        #     return {"error": "Internal server error"}, 500
+        
         if os.path.exists(midi_path):
             print('MIDI file exists:', midi_path)
             id = str(uuid.uuid4())
@@ -111,5 +122,14 @@ def serve(path):
 if __name__ == '__main__':
     if not os.path.exists(TEMP_DIR):
         os.makedirs(TEMP_DIR)
+        
+    # Set appropriate location for lilypond for Windows users
+    if sys.platform.startswith('win'):
+        project_root = Path(__file__).parent.parent
+        include_folder_path = project_root / "include" / "lilypond-2.24.3" / "bin" / "lilypond.exe"
+        lilypond_path = str(include_folder_path.resolve())
+        environment.set('lilypondPath', lilypond_path)
+        print(f"Lilypond path set to {lilypond_path}")
+        
     app.logger.setLevel('DEBUG')
     app.run(debug=True)

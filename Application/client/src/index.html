@@ -18,6 +18,7 @@
     </div>
 
     <script>
+        // Show filename in file chooser
         document.addEventListener('DOMContentLoaded', function () {
             var fileInput = document.getElementById('fileInput');
             fileInput.addEventListener('change', function(e){
@@ -27,6 +28,7 @@
             });
         });
 
+        // Handle file uploads
         function uploadFile() {
             var input = document.getElementById('fileInput');
             if (input.files.length > 0) {
@@ -75,9 +77,6 @@
                                 .catch(error => console.error("error: ",error));
                         };
                         responseDiv.appendChild(pdfButton);
-
-                        // For PDF generation (future implementation)
-                        // if (data.pdfId) { ... }
                     }
                 })
                 .catch(error => console.error('Error:', error));
