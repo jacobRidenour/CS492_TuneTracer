@@ -2,10 +2,9 @@
 
 ## Original Model
 
-|Model Type|Optimizer|Loss|Metrics|
-|----------|---------|----|-------|
-Sequential CNN|adam|categorical_crossentropy|accuracy
-
+|Model Type|Dataset|Optimizer|Loss|Metrics|Batch size|Epochs
+|----------|---------|----|-------|-------|----------|------|
+Sequential CNN|IRMAS|adam|categorical_crossentropy|accuracy|336|10|
 
 |Layer | Parameter 1 | Parameter 2 | Activation|
 |-----:|-------------|-------------|-----------|
