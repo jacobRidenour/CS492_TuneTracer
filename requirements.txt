@@ -4,3 +4,9 @@ tensorflow==2.12.0
 basic-pitch
 music21
 librosa
+numpy
+matplotlib
+pandas
+librosa
+wget
+scikit-learn

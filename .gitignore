@@ -2,3 +2,5 @@ temp/
 .venv
 __pycache__/
 include/
+Irmas_TestData
+*.keras
