@@ -4,3 +4,4 @@ __pycache__/
 include/
 Irmas_TestData
 *.keras
+test_audio/
