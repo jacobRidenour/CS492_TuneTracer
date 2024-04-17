@@ -93,13 +93,16 @@ def download_file(file_id):
             return {"error": "Internal server error"}, 500
     return {"error": "File not found"}, 404
 
-@app.route('/getPdf/<file_id>', methods=['GET'])
-def send_pdf(file_id):
+@app.route('/getPdf', methods=['POST'])
+def send_pdf():
+    data = request.form
+    file_id = data.get('midiId')
+    instrument = data.get('instrument')
     if file_id in temp_store:
         file_path = temp_store[file_id]
         print(f'Attempting to convert midi file {file_path} to pdf')
         try:
-            midi_pdf = midi_to_pdf(file_path)
+            midi_pdf = midi_to_pdf(file_path, instrument)
             return send_file(
                 io.BytesIO(midi_pdf),
                 mimetype='application/pdf',
