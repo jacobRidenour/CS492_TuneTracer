@@ -16,6 +16,9 @@
         <div id="response" class="mt-3"></div>
         <div id="pdfContainer" class="mt-3"></div>
         <audio id="audioPlayer" controls style="display: none; width: 100%;"></audio>
+        <div id="spinner" class="spinner-border text-primary" style="display: none;" role="status">
+          <span class="sr-only">Loading...</span>
+      </div>
     </div>
 
     <script>
@@ -36,7 +39,10 @@
         // Handle file uploads
         function uploadFile() {
             var input = document.getElementById('fileInput');
+            var spinner = document.getElementById('spinner'); // Get the spinner element
+
             if (input.files.length > 0) {
+                spinner.style.display = 'block';
                 var file = input.files[0];
                 var formData = new FormData();
                 formData.append('file', file);
@@ -51,10 +57,11 @@
                 })
                 .then(response => response.json())
                 .then(data => {
+                  spinner.style.display = 'none';
+
                   if (data.audioUrl) {
                         audioPlayer.src = '/download/' + data.audioUrl;
                         audioPlayer.style.display = "block"; // Show the audio player
-                        alert(data.audioUrl)
                     }
                   
                     if(data.instrumentPrediction){
@@ -100,7 +107,10 @@
                         responseDiv.appendChild(pdfButton);
                     }
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                  console.error('Error:', error);
+                  spinner.style.display = 'none';
+                });
             } else {
                 alert("Please select a file first.");
             }
