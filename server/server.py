@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory, send_file, current_app
+from flask import Flask, request, jsonify, send_from_directory, send_file, current_app, url_for
 import os
 import io
 from utils import *
@@ -14,6 +14,7 @@ app = Flask(__name__, static_folder='../Application/client/src')
 TEMP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'temp')
 
 temp_store = {}
+audio_store = {}
 
 @app.route('/upload', methods=['POST'])
 def handle_upload():
@@ -68,10 +69,12 @@ def handle_upload():
             print('MIDI file exists:', midi_path)
             id = str(uuid.uuid4())
             temp_store[id] = midi_path
+            audio_id = str(uuid.uuid4())
+            audio_store[audio_id] = unique_filename
             return jsonify({
                 "midiId": id,
                 "midiFilename": midi_filename,
-                # "pdfId": "soon"
+                "audioUrl": audio_id,
                 "instrumentPrediction": prediction,
             })
         else:
@@ -91,6 +94,15 @@ def download_file(file_id):
         except Exception as e:
             print(f"Error serving file: {e}")
             return {"error": "Internal server error"}, 500
+    elif file_id in audio_store:
+        file_path = audio_store[file_id]
+        print(f"Attempting to serve file from path: {file_path}")
+        try:
+            return send_from_directory(directory=TEMP_DIR, path=os.path.basename(file_path), as_attachment=True)
+        except Exception as e:
+            print(f"Error serving file: {e}")
+            return {"error": "Internal server error"}, 500
+        
     return {"error": "File not found"}, 404
 
 @app.route('/getPdf', methods=['POST'])
