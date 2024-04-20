@@ -50,8 +50,9 @@
                 .then(response => response.json())
                 .then(data => {
                     if(data.instrumentPrediction){
+                        var pred = data.instrumentPrediction;
                         const predictionText = document.createElement("div");
-                        predictionText.textContent = "Instrument Prediction: " + data.instrumentPrediction;
+                        predictionText.textContent = "Instrument Prediction: " + pred;
                         responseDiv.appendChild(predictionText);
                     }
                     if (data.midiId) {
@@ -67,7 +68,15 @@
                         pdfButton.onclick = function() {
                             pdfDiv.innerHTML = "";
 
-                            fetch(`/getPdf/${data.midiId}`)
+                            //create form data to post
+                            let postBody = new FormData();
+                            postBody.append('midiId', data.midiId);
+                            postBody.append('instrument', pred);
+
+                            fetch(`/getPdf`, {
+                                method: 'POST',
+                                body: postBody,
+                            })
                                 .then(response => response.blob())
                                 .then(blob => {
                                     const blobUrl = URL.createObjectURL(blob);
