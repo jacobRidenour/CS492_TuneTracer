@@ -10,3 +10,4 @@ pandas
 librosa
 wget
 scikit-learn
+mido

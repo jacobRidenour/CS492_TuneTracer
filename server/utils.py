@@ -2,7 +2,8 @@ import os
 import sys
 from pathlib import Path
 from music21 import *
-
+import mido
+from mido import MidiFile, MidiTrack, Message
 
 def writePdf(score):
     # temporarily store pdf
@@ -17,6 +18,32 @@ def writePdf(score):
     os.remove("./temp")
 
     return pdf_content
+
+def change_midi_instrument(midi_path, predicted_instrument):
+    instrument_programs = {
+        'Cello': 42,
+        'Clarinet': 71,
+        'Flute': 73,
+        'Acoustic Guitar': 24,
+        'Electric Guitar': 30,
+        'Organ': 19,
+        'Piano': 0,
+        'Saxophone': 65,
+        'Trumpet': 56,
+        'Violin': 40,
+        'Voice': 52,
+        'None': None
+    }
+
+    new_program = instrument_programs.get(predicted_instrument, 0)  # Default to Piano
+
+    mid = MidiFile(midi_path)
+    for i, track in enumerate(mid.tracks):
+        for msg in track:
+            if msg.type == 'program_change':
+                msg.program = new_program
+
+    mid.save(midi_path)
 
 
 def score_to_grand_staff(part):

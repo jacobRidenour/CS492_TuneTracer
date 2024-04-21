@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory, send_file, current_app
+from flask import Flask, request, jsonify, send_from_directory, send_file, current_app, url_for
 import os
 import io
 from utils import *
@@ -14,6 +14,7 @@ app = Flask(__name__, static_folder='../Application/client/src')
 TEMP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'temp')
 
 temp_store = {}
+audio_store = {}
 
 @app.route('/upload', methods=['POST'])
 def handle_upload():
@@ -50,36 +51,28 @@ def handle_upload():
         current_app.logger.error(f"Error in instrument recognition: {str(e)}")
         return {"error": "Internal server error"}, 500
     
-    midi_filename = os.path.splitext(unique_filename)[0] + '_basic_pitch.mid'
-    
-    try: 
+    try:
+        midi_filename = os.path.splitext(unique_filename)[0] + '_basic_pitch.mid'
         midi_path = os.path.join(output_directory, midi_filename)
-        
-        # Open/Edit midi here (maybe use a function in utils.py?)
-        # try:
-        #     with open(midi_path) as file:
-        #         change instrument of midi file based on prediction
-        #         other changes
-        # except Exception as e:
-        #     current_app.logger.error(f"Error in editing MIDI: {str(e)}")
-        #     return {"error": "Internal server error"}, 500
-        
+
         if os.path.exists(midi_path):
             print('MIDI file exists:', midi_path)
+            # Change MIDI instrument based on prediction
+            if prediction != "None":
+                change_midi_instrument(midi_path, prediction)
+
             id = str(uuid.uuid4())
             temp_store[id] = midi_path
             return jsonify({
                 "midiId": id,
                 "midiFilename": midi_filename,
-                # "pdfId": "soon"
                 "instrumentPrediction": prediction,
             })
         else:
-            print('MIDI file does not exist:', midi_path)
             return {"error": "Failed to generate MIDI file"}, 500
     except Exception as e:
         current_app.logger.error(f"Error in handle_upload: {str(e)}")
-        return {"error": "Internal server error"}, 500
+        return {"error": "Internal server error"}, 500   
 
 @app.route('/download/<file_id>', methods=['GET'])
 def download_file(file_id):
@@ -91,6 +84,15 @@ def download_file(file_id):
         except Exception as e:
             print(f"Error serving file: {e}")
             return {"error": "Internal server error"}, 500
+    elif file_id in audio_store:
+        file_path = audio_store[file_id]
+        print(f"Attempting to serve file from path: {file_path}")
+        try:
+            return send_from_directory(directory=TEMP_DIR, path=os.path.basename(file_path), as_attachment=True)
+        except Exception as e:
+            print(f"Error serving file: {e}")
+            return {"error": "Internal server error"}, 500
+        
     return {"error": "File not found"}, 404
 
 @app.route('/getPdf', methods=['POST'])
