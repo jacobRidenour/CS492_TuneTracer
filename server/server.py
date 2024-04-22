@@ -51,28 +51,33 @@ def handle_upload():
         current_app.logger.error(f"Error in instrument recognition: {str(e)}")
         return {"error": "Internal server error"}, 500
     
+    midi_filename = os.path.splitext(unique_filename)[0] + '_basic_pitch.mid'
+    
     try:
-        midi_filename = os.path.splitext(unique_filename)[0] + '_basic_pitch.mid'
         midi_path = os.path.join(output_directory, midi_filename)
 
         if os.path.exists(midi_path):
             print('MIDI file exists:', midi_path)
-            # Change MIDI instrument based on prediction
-            if prediction != "None":
-                change_midi_instrument(midi_path, prediction)
-
+            
+            if prediction != None:
+                    change_midi_instrument(midi_path, prediction)
+            
             id = str(uuid.uuid4())
             temp_store[id] = midi_path
+            audio_id = str(uuid.uuid4())
+            audio_store[audio_id] = unique_filename
             return jsonify({
                 "midiId": id,
                 "midiFilename": midi_filename,
+                "audioUrl": audio_id,
                 "instrumentPrediction": prediction,
             })
         else:
+            print('MIDI file does not exist:', midi_path)
             return {"error": "Failed to generate MIDI file"}, 500
     except Exception as e:
         current_app.logger.error(f"Error in handle_upload: {str(e)}")
-        return {"error": "Internal server error"}, 500   
+        return {"error": "Internal server error"}, 500
 
 @app.route('/download/<file_id>', methods=['GET'])
 def download_file(file_id):
