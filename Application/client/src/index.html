@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Tune Tracer</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
+
 <body>
     <div class="container mt-5">
         <h1 class="mb-4">Tune Tracer</h1>
@@ -14,115 +16,119 @@
         </div>
         <button onclick="uploadFile()" class="btn btn-primary">Upload</button>
         <div id="response" class="mt-3"></div>
-        <div id="pdfContainer" class="mt-3"></div>
         <audio id="audioPlayer" controls style="display: none; width: 100%;"></audio>
+        <div id="pdfContainer" class="mt-3"></div>
         <div id="spinner" class="spinner-border text-primary" style="display: none;" role="status">
-          <span class="sr-only">Loading...</span>
-      </div>
+            <span class="sr-only">Loading...</span>
+        </div>
     </div>
 
     <script>
         // Show filename in file chooser
         document.addEventListener('DOMContentLoaded', function () {
             var fileInput = document.getElementById('fileInput');
-            fileInput.addEventListener('change', function(e){
+            fileInput.addEventListener('change', function (e) {
                 var fileName = e.target.files[0].name;
                 var label = e.target.nextElementSibling;
                 label.innerText = fileName;
 
-                // Clear response & PDF container if new file selected
+                // Clear response, PDF container, and reset/hide audio player if new file selected
                 document.getElementById("response").innerHTML = "";
                 document.getElementById("pdfContainer").innerHTML = "";
+                var audioPlayer = document.getElementById("audioPlayer");
+                audioPlayer.src = "";  // Reset source
+                audioPlayer.style.display = "none";  // Hide the player
             });
         });
 
+
         // Handle file uploads
+        function uploadFile() {
+            var input = document.getElementById('fileInput');
+            var spinner = document.getElementById('spinner');
 
+            if (input.files.length > 0) {
+                spinner.style.display = 'block';
+                var file = input.files[0];
+                var formData = new FormData();
+                formData.append('file', file);
+                const responseDiv = document.getElementById("response");
+                const pdfDiv = document.getElementById("pdfContainer");
+                const audioPlayer = document.getElementById("audioPlayer");
 
-function uploadFile() {
-    var input = document.getElementById('fileInput');
-    var spinner = document.getElementById('spinner');
+                responseDiv.innerHTML = "<br>";
+                pdfDiv.innerHTML = "";
+                audioPlayer.innerHTML = "";
 
-    if (input.files.length > 0) {
-        spinner.style.display = 'block';
-        var file = input.files[0];
-        var formData = new FormData();
-        formData.append('file', file);
-        const responseDiv = document.getElementById("response");
-        const pdfDiv = document.getElementById("pdfContainer");
-        const audioPlayer = document.getElementById("audioPlayer");
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        spinner.style.display = 'none'; // Hide upload spinner after upload completes
 
-        responseDiv.innerHTML = "<br>";
-        pdfDiv.innerHTML = "";
+                        if (data.audioUrl) {
+                            audioPlayer.src = '/download/' + data.audioUrl;
+                            audioPlayer.style.display = "block"; // Show the audio player
+                        }
 
-        fetch('/upload', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            spinner.style.display = 'none'; // Hide upload spinner after upload completes
+                        if (data.instrumentPrediction) {
+                            const predictionText = document.createElement("div");
+                            predictionText.textContent = "Instrument Prediction: " + data.instrumentPrediction;
+                            responseDiv.appendChild(predictionText);
+                        }
 
-            if (data.audioUrl) {
-                audioPlayer.src = '/download/' + data.audioUrl;
-                audioPlayer.style.display = "block"; // Show the audio player
+                        if (data.midiId) {
+                            const downloadMidiBtn = document.createElement("button");
+                            downloadMidiBtn.innerText = "Download MIDI";
+                            downloadMidiBtn.onclick = function () {
+                                window.location.href = `/download/${data.midiId}`;
+                            };
+                            responseDiv.appendChild(downloadMidiBtn);
+
+                            // Automatically start PDF generation
+                            generatePdf(data.midiId, data.instrumentPrediction, pdfDiv);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        spinner.style.display = 'none';
+                    });
+            } else {
+                alert("Please select a file first.");
             }
+        }
 
-            if(data.instrumentPrediction){
-                const predictionText = document.createElement("div");
-                predictionText.textContent = "Instrument Prediction: " + data.instrumentPrediction;
-                responseDiv.appendChild(predictionText);
-            }
+        function generatePdf(midiId, instrument, pdfDiv) {
+            const spinner = document.getElementById('spinner'); // Reuse the same spinner or use a different one for PDF generation
+            spinner.style.display = 'block'; // Show spinner during PDF generation
 
-            if (data.midiId) {
-                const downloadMidiBtn = document.createElement("button");
-                downloadMidiBtn.innerText = "Download MIDI";
-                downloadMidiBtn.onclick = function() {
-                    window.location.href = `/download/${data.midiId}`;
-                };
-                responseDiv.appendChild(downloadMidiBtn);
+            let postBody = new FormData();
+            postBody.append('midiId', midiId);
+            postBody.append('instrument', instrument);
 
-                // Automatically start PDF generation
-                generatePdf(data.midiId, data.instrumentPrediction, pdfDiv);
-            }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          spinner.style.display = 'none';
-        });
-    } else {
-        alert("Please select a file first.");
-    }
-}
-
-function generatePdf(midiId, instrument, pdfDiv) {
-    const spinner = document.getElementById('spinner'); // Reuse the same spinner or use a different one for PDF generation
-    spinner.style.display = 'block'; // Show spinner during PDF generation
-
-    let postBody = new FormData();
-    postBody.append('midiId', midiId);
-    postBody.append('instrument', instrument);
-
-    fetch(`/getPdf`, {
-        method: 'POST',
-        body: postBody,
-    })
-    .then(response => response.blob())
-    .then(blob => {
-        spinner.style.display = 'none'; // Hide spinner once PDF is ready
-        const blobUrl = URL.createObjectURL(blob);
-        const pdfObject = document.createElement("object");
-        pdfObject.data = blobUrl;
-        pdfObject.type = "application/pdf";
-        pdfObject.width = "100%";
-        pdfObject.height = "500px"; // Adjust size as needed
-        pdfDiv.appendChild(pdfObject);
-    })
-    .catch(error => {
-        console.error("error: ", error);
-        spinner.style.display = 'none';
-    });
-}
+            fetch(`/getPdf`, {
+                method: 'POST',
+                body: postBody,
+            })
+                .then(response => response.blob())
+                .then(blob => {
+                    spinner.style.display = 'none'; // Hide spinner once PDF is ready
+                    const blobUrl = URL.createObjectURL(blob);
+                    const pdfObject = document.createElement("object");
+                    pdfObject.data = blobUrl;
+                    pdfObject.type = "application/pdf";
+                    pdfObject.width = "100%";
+                    pdfObject.height = "500px"; // Adjust size as needed
+                    pdfDiv.appendChild(pdfObject);
+                })
+                .catch(error => {
+                    console.error("error: ", error);
+                    spinner.style.display = 'none';
+                });
+        } 
     </script>
 </body>
+
 </html>
