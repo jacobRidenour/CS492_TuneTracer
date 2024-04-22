@@ -37,59 +37,7 @@
         });
 
         // Handle file uploads
-        function uploadFile() {
-            var input = document.getElementById('fileInput');
-            var spinner = document.getElementById('spinner'); // Get the spinner element
 
-            if (input.files.length > 0) {
-                spinner.style.display = 'block';
-                var file = input.files[0];
-                var formData = new FormData();
-                formData.append('file', file);
-                const responseDiv = document.getElementById("response");
-                const pdfDiv = document.getElementById("pdfContainer");
-                const audioPlayer = document.getElementById("audioPlayer");
-                responseDiv.innerHTML = "<br>";
-                pdfDiv.innerHTML = "";
-                fetch('/upload', {
-                    method: 'POST',
-                    body: formData,
-                })
-                .then(response => response.json())
-                .then(data => {
-                    spinner.style.display = 'none'; // Hide upload spinner after upload completes
-
-                    if (data.audioUrl) {
-                        audioPlayer.src = '/download/' + data.audioUrl;
-                        audioPlayer.style.display = "block"; // Show the audio player
-                    }
-
-                    if(data.instrumentPrediction){
-                        const predictionText = document.createElement("div");
-                        predictionText.textContent = "Instrument Prediction: " + data.instrumentPrediction;
-                        responseDiv.appendChild(predictionText);
-                    }
-
-                    if (data.midiId) {
-                        const downloadMidiBtn = document.createElement("button");
-                        downloadMidiBtn.innerText = "Download MIDI";
-                        downloadMidiBtn.onclick = function() {
-                            window.location.href = `/download/${data.midiId}`;
-                        };
-                        responseDiv.appendChild(downloadMidiBtn);
-
-                        // Automatically start PDF generation
-                        generatePdf(data.midiId, data.instrumentPrediction, pdfDiv);
-                    }
-                })
-                .catch(error => {
-                console.error('Error:', error);
-                spinner.style.display = 'none';
-                });
-            } else {
-                alert("Please select a file first.");
-            }
-        }
 
 function uploadFile() {
     var input = document.getElementById('fileInput');
