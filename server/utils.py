@@ -13,7 +13,7 @@ def writePdf(score):
     with open("./temp.pdf", "rb") as pdf_file:
         pdf_content = pdf_file.read()
 
-    # remove temp pdf
+    # remove temp pdf 
     os.remove("./temp.pdf")
     os.remove("./temp")
 
